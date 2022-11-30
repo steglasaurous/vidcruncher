@@ -2,10 +2,12 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use App\Repository\ProjectRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
+// FIXME: Might make sense to move this to its own file
 enum ProjectStatus: string {
     case Pending = 'pending';
     case Splitting = 'splitting';
@@ -18,30 +20,31 @@ enum ProjectStatus: string {
 
 
 #[ApiResource]
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: ProjectRepository::class)]
 class Project {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private int $id;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private \DateTime $start;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private \DateTime $completed;
 
     #[ORM\Column]
     private ProjectStatus $status = ProjectStatus::Pending;
 
     #[ORM\ManyToOne(targetEntity: Profile::class)]
+    #[ORM\JoinColumn(nullable: false)]
     private Profile $profile;
 
     #[ORM\Column]
-    private string $originFilename;
+    private string $originFilePath;
 
-    #[ORM\Column]
-    private string $assembledFilename;
+    #[ORM\Column(nullable: true)]
+    private string $assembledFilePath;
 
     #[ORM\OneToMany(targetEntity: Media::class, mappedBy: 'project')]
     private Collection $media;
@@ -105,25 +108,25 @@ class Project {
         return $this;
     }
 
-    public function getOriginFilename(): string
+    public function getOriginFilePath(): string
     {
-        return $this->originFilename;
+        return $this->originFilePath;
     }
 
-    public function setOriginFilename(string $originFilename): Project
+    public function setOriginFilePath(string $originFilePath): Project
     {
-        $this->originFilename = $originFilename;
+        $this->originFilePath = $originFilePath;
         return $this;
     }
 
-    public function getAssembledFilename(): string
+    public function getAssembledFilePath(): string
     {
-        return $this->assembledFilename;
+        return $this->assembledFilePath;
     }
 
-    public function setAssembledFilename(string $assembledFilename): Project
+    public function setAssembledFilePath(string $assembledFilePath): Project
     {
-        $this->assembledFilename = $assembledFilename;
+        $this->assembledFilePath = $assembledFilePath;
         return $this;
     }
 

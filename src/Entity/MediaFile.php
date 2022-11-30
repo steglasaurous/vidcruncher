@@ -2,9 +2,9 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
-use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Link;
+use App\Repository\MediaFileRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 enum MediaType: string {
@@ -24,7 +24,7 @@ enum MediaType: string {
         )
     ]
 )]
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: MediaFileRepository::class)]
 class MediaFile {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -32,12 +32,13 @@ class MediaFile {
     private int $id;
 
     #[ORM\ManyToOne(targetEntity: Media::class, inversedBy: 'mediaFiles')]
+    #[ORM\JoinColumn(nullable: false)]
     private Media $media;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: false)]
     private MediaType $mediaType;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: false)]
     private string $mediaPath;
 
     public function getId(): int

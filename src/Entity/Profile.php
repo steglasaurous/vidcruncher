@@ -2,10 +2,11 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use App\Repository\ProfileRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: ProfileRepository::class)]
 #[ApiResource]
 class Profile {
     #[ORM\Id]
@@ -16,8 +17,11 @@ class Profile {
     #[ORM\Column]
     private string $name;
 
-    #[ORM\Column]
-    private string $ffmpegParams;
+    #[ORM\Column(nullable: false)]
+    private int $preset = 8;
+
+    #[ORM\Column(nullable: false)]
+    private int $crf = 40;
 
     #[ORM\Column]
     private string $inputPath;
@@ -59,14 +63,25 @@ class Profile {
         return $this;
     }
 
-    public function getFfmpegParams(): string
+    public function getPreset(): int
     {
-        return $this->ffmpegParams;
+        return $this->preset;
     }
 
-    public function setFfmpegParams(string $ffmpegParams): Profile
+    public function setPreset(int $preset): Profile
     {
-        $this->ffmpegParams = $ffmpegParams;
+        $this->preset = $preset;
+        return $this;
+    }
+
+    public function getCrf(): int
+    {
+        return $this->crf;
+    }
+
+    public function setCrf(int $crf): Profile
+    {
+        $this->crf = $crf;
         return $this;
     }
 

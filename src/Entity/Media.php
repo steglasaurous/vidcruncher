@@ -2,6 +2,7 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use App\Repository\MediaRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -15,22 +16,24 @@ enum MediaStatus: string {
 }
 
 #[ApiResource]
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: MediaRepository::class)]
 class Media {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private int $id;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private \DateTime $start;
-    #[ORM\Column]
+
+    #[ORM\Column(nullable: true)]
     private \DateTime $completed;
 
     #[ORM\Column]
     private MediaStatus $status = MediaStatus::Pending;
 
     #[ORM\ManyToOne(targetEntity: Project::class, inversedBy: 'media')]
+    #[ORM\JoinColumn(nullable: false)]
     private Project $project;
 
     #[ORM\OneToMany(mappedBy: 'media', targetEntity: MediaFile::class)]

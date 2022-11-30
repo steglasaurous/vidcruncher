@@ -1,5 +1,7 @@
 doctrine:
     dbal:
+        schema_filter: '~^(?!messenger_messages)~'
+
         url: '%env(resolve:DATABASE_URL)%'
 
         # IMPORTANT: You MUST configure your server version,
