@@ -6,11 +6,19 @@ namespace App\Message;
 // to do that right, it'll get messy. (other codecs vary wildly in options, etc)
 class EncodeMessage {
     public function __construct(
+        private readonly int    $mediaId,
         private readonly int    $mediaFileId,
         private readonly string $mediaFileUrl,
+        private readonly string $mediaFileName,
         private readonly int    $preset,
         private readonly int    $crf
     ) {}
+
+
+    public function getMediaId(): int
+    {
+        return $this->mediaId;
+    }
 
     public function getMediaFileId(): int
     {
@@ -20,6 +28,11 @@ class EncodeMessage {
     public function getMediaFileUrl(): string
     {
         return $this->mediaFileUrl;
+    }
+
+    public function getMediaFileName(): string
+    {
+        return $this->mediaFileName;
     }
 
     public function getPreset(): int

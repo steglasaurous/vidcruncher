@@ -40,11 +40,14 @@ class Project {
     #[ORM\JoinColumn(nullable: false)]
     private Profile $profile;
 
-    #[ORM\Column]
+    /**
+     * Original file - for recordings primarily so they don't get processed more than once.
+     */
+    #[ORM\Column(nullable: true)]
     private string $originFilePath;
 
     #[ORM\Column(nullable: true)]
-    private string $assembledFilePath;
+    private string $outputFilename;
 
     #[ORM\OneToMany(targetEntity: Media::class, mappedBy: 'project')]
     private Collection $media;
@@ -119,14 +122,14 @@ class Project {
         return $this;
     }
 
-    public function getAssembledFilePath(): string
+    public function getOutputFilename(): string
     {
-        return $this->assembledFilePath;
+        return $this->outputFilename;
     }
 
-    public function setAssembledFilePath(string $assembledFilePath): Project
+    public function setOutputFilename(string $outputFilename): Project
     {
-        $this->assembledFilePath = $assembledFilePath;
+        $this->outputFilename = $outputFilename;
         return $this;
     }
 

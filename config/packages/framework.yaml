@@ -11,6 +11,13 @@ framework:
         cookie_secure: auto
         cookie_samesite: lax
         storage_factory_id: session.storage.factory.native
+    http_client:
+        scoped_clients:
+            coordinator.client:
+                scope: '%env(COORDINATOR_BASE_URL)%'
+                base_uri: '%env(COORDINATOR_BASE_URL)%'
+                headers:
+                    Accept: 'application/ld+json'
 
     #esi: true
     #fragments: true

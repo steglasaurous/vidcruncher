@@ -1,0 +1,15 @@
+vich_uploader:
+    db_driver: orm
+    metadata:
+        type: attribute
+    mappings:
+        media_file:
+            uri_prefix: /videos/fragments
+            upload_destination: '%kernel.project_dir%/public/videos/fragments'
+            namer: App\Service\UploaderBundle\Naming\EncodedFileNamer # FIXME: Make this thing name it the original filename, OR find a good way to keep ordering of files, since it's relevant.
+            delete_on_remove: true
+            delete_on_update: true
+    #mappings:
+    #    products:
+    #        uri_prefix: /images/products
+    #        upload_destination: '%kernel.project_dir%/public/images/products'

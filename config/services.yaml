@@ -14,6 +14,7 @@ services:
             $vidCruncherVideosRoot: '%env(resolve:VIDEOS_ROOT)%'
             $vidCruncherSplitThresholdSeconds: 120
             $vidCruncherCoordinatorBaseUrl: '%env(COORDINATOR_BASE_URL)%'
+            $vidCruncherVideoFragmentsPath: '%env(VIDEO_FRAGMENTS_PATH)%'
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
@@ -32,3 +33,6 @@ services:
 
     FFMpeg\FFProbe:
         factory: ['FFMpeg\FFProbe', 'create']
+
+    App\Service\UploaderBundle\Naming\EncodedFileNamer:
+        public: true

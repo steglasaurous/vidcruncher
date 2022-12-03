@@ -9,8 +9,6 @@ use App\Entity\Profile;
 use App\Entity\Project;
 use App\Entity\ProjectStatus;
 use App\Message\MediaSplitMessage;
-use App\Repository\MediaFileRepository;
-use App\Repository\MediaRepository;
 use App\Repository\ProfileRepository;
 use App\Repository\ProjectRepository;
 use Doctrine\Common\Collections\Criteria;
@@ -19,26 +17,29 @@ use Doctrine\ORM\EntityManagerInterface;
 use FFMpeg\Exception\RuntimeException;
 use FFMpeg\FFProbe;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 class InputPathScanner {
     public function __construct(
-        private string $vidCruncherVideosRoot,
-        private int $vidCruncherSplitThresholdSeconds,
-        private ProfileRepository $profileRepository,
-        private ProjectRepository $projectRepository,
-        private MediaFileRepository $mediaFileRepository,
-        private EntityManagerInterface $entityManager,
-        private FFProbe $ffProbe,
-        private LoggerInterface $logger,
-        private MessageBusInterface $messageBus
+        private readonly string                 $vidCruncherVideosRoot,
+        private readonly int                    $vidCruncherSplitThresholdSeconds,
+        private readonly string                 $vidCruncherVideoFragmentsPath,
+        private readonly ProfileRepository      $profileRepository,
+        private readonly ProjectRepository      $projectRepository,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly FFProbe                $ffProbe,
+        private readonly LoggerInterface        $logger,
+        private readonly MessageBusInterface    $messageBus,
+        private readonly Filesystem             $filesystem
     )
     {
     }
 
-    public function scanAll() {
+    public function scanAll(): void
+    {
         $profiles = $this->profileRepository->findAll();
         /** @var Profile $profile */
         foreach ($profiles as $profile) {
@@ -46,7 +47,8 @@ class InputPathScanner {
         }
     }
 
-    public function scanProfile(Profile $profile) {
+    public function scanProfile(Profile $profile): void
+    {
 
         $duration = 0;
         $inputPath = sprintf('%s/%s', $this->vidCruncherVideosRoot, $profile->getInputPath());
@@ -62,11 +64,10 @@ class InputPathScanner {
         foreach ($finder as $file) {
             $this->processFile($file, $profile);
         }
-
-
     }
 
-    public function processFile(SplFileInfo $file, Profile $profile) {
+    public function processFile(SplFileInfo $file, Profile $profile): void
+    {
         if (time() - $file->getMTime() < $profile->getProcessModifiedOlderThan()) {
             return;
         }
@@ -97,6 +98,7 @@ class InputPathScanner {
             $project = new Project();
             $project->setStatus(ProjectStatus::Pending);
             $project->setOriginFilePath($file->getRealPath());
+            $project->setOutputFilename($file->getFilename());
             $project->setProfile($profile);
         }
 
@@ -107,37 +109,42 @@ class InputPathScanner {
 
             return;
         }
+        $this->entityManager->persist($project);
+        $this->entityManager->flush();
 
-        $mediaFile = $this->mediaFileRepository->findBy(['mediaPath' => $file->getRealPath()]);
-        if ($mediaFile) {
+        if ($duration > $this->vidCruncherSplitThresholdSeconds) {
+            $this->logger->debug(sprintf('Queueing %s for file splitting', $file->getFilename()));
+            $this->messageBus->dispatch(new MediaSplitMessage($project->getId(), $file->getRealPath()));
+
+            // Let the split take care of the rest.
             return;
         }
 
+
+        // The remainder of this handling covers live videos, OR videos that don't meet the duration threshold
+        // Move the file to the 'fragments' path
+        $newFilePath = sprintf('%s/%s/%s', $this->vidCruncherVideosRoot, $this->vidCruncherVideoFragmentsPath, $file->getFilename());
+
+        $this->filesystem->rename($file->getRealPath(), $newFilePath);
+
+        // We'll make the assumption that ALL media items reside in theh same path, so all it needs to know is the filename.
         $media = new Media();
-        $media->setProfile($profile);
         $media->setProject($project);
-        $media->setOriginFilename($file->getFilename());
         $media->setStatus(MediaStatus::Pending);
 
         $mediaFile = new MediaFile();
         $mediaFile->setMedia($media);
         $mediaFile->setMediaPath($file->getRealPath());
-        if ($profile->isLiveRecordings()) {
-            $mediaFile->setMediaType(MediaType::VideoFragment);
-        } else {
-            $mediaFile->setMediaType(MediaType::OriginalVideo);
-        }
+        $mediaFile->setMediaType(MediaType::VideoFragment);
 
-        $this->entityManager->persist($project);
         $this->entityManager->persist($media);
         $this->entityManager->persist($mediaFile);
+
+        // Update project to processing, since it's ready to do so.
+        $project->setStatus(ProjectStatus::Processing);
+
         $this->entityManager->flush();
 
-        if ($duration > $this->vidCruncherSplitThresholdSeconds) {
-            $this->logger->debug('This needs splitting.');
-            $this->messageBus->dispatch(new MediaSplitMessage($mediaFile->getId()));
-        }
-
-        $this->logger->debug(sprintf('Read file %s', $file->getFilename()));
+        $this->logger->debug(sprintf('Processed file %s', $file->getFilename()));
     }
 }

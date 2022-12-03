@@ -2,10 +2,15 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Link;
+use ApiPlatform\Metadata\Post;
 use App\Repository\MediaFileRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 enum MediaType: string {
     case OriginalVideo =  'original_video';
@@ -13,7 +18,15 @@ enum MediaType: string {
     case OutputVideo = 'output_video';
 }
 
-#[ApiResource]
+#[ApiResource(
+    operations: [
+        new GetCollection(),
+        new Get(),
+        new Post(inputFormats: ['multipart' => ['multipart/form-data']])
+    ],
+    normalizationContext: ['groups' => ['media_file:read']],
+    denormalizationContext: ['groups' => ['media_file:write']]
+)]
 #[ApiResource(
     uriTemplate: '/media/{id}/files',
     operations: [new GetCollection()],
@@ -25,21 +38,30 @@ enum MediaType: string {
     ]
 )]
 #[ORM\Entity(repositoryClass: MediaFileRepository::class)]
+#[Vich\Uploadable]
 class MediaFile {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['media_file:read'])]
     private int $id;
 
     #[ORM\ManyToOne(targetEntity: Media::class, inversedBy: 'mediaFiles')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['media_file:read', 'media_file:write'])]
     private Media $media;
 
     #[ORM\Column(nullable: false)]
+    #[Groups(['media_file:read', 'media_file:write'])]
     private MediaType $mediaType;
 
-    #[ORM\Column(nullable: false)]
-    private string $mediaPath;
+    #[ORM\Column(nullable: true)]
+    #[Groups(['media_file:read'])]
+    private ?string $mediaPath = null;
+
+    #[Vich\UploadableField(mapping: "media_file", fileNameProperty: "mediaPath")]
+    #[Groups(['media_file:write'])]
+    private ?File $file = null;
 
     public function getId(): int
     {
@@ -82,6 +104,17 @@ class MediaFile {
     public function setMediaPath(string $mediaPath): MediaFile
     {
         $this->mediaPath = $mediaPath;
+        return $this;
+    }
+
+    public function getFile(): ?File
+    {
+        return $this->file;
+    }
+
+    public function setFile(?File $file): MediaFile
+    {
+        $this->file = $file;
         return $this;
     }
 }

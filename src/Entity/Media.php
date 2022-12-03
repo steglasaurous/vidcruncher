@@ -10,7 +10,6 @@ use Doctrine\ORM\Mapping as ORM;
 enum MediaStatus: string {
     case Pending = 'pending';
     case Processing = 'processing';
-    case ReadyForAssembly = 'ready_for_assembly';
     case Done = 'done';
     case Failed = 'failed';
 }
@@ -31,6 +30,10 @@ class Media {
 
     #[ORM\Column]
     private MediaStatus $status = MediaStatus::Pending;
+
+    #[ORM\Column(nullable: true)]
+    private string $workerName;
+
 
     #[ORM\ManyToOne(targetEntity: Project::class, inversedBy: 'media')]
     #[ORM\JoinColumn(nullable: false)]
@@ -88,36 +91,14 @@ class Media {
         return $this;
     }
 
-    public function getProfile(): Profile
+    public function getWorkerName(): string
     {
-        return $this->profile;
+        return $this->workerName;
     }
 
-    public function setProfile(Profile $profile): Media
+    public function setWorkerName(string $workerName): Media
     {
-        $this->profile = $profile;
-        return $this;
-    }
-
-    public function getOriginFilename(): string
-    {
-        return $this->originFilename;
-    }
-
-    public function setOriginFilename(string $originFilename): Media
-    {
-        $this->originFilename = $originFilename;
-        return $this;
-    }
-
-    public function getAssembledFilename(): string
-    {
-        return $this->assembledFilename;
-    }
-
-    public function setAssembledFilename(string $assembledFilename): Media
-    {
-        $this->assembledFilename = $assembledFilename;
+        $this->workerName = $workerName;
         return $this;
     }
 

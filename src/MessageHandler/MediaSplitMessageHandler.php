@@ -2,11 +2,15 @@
 
 namespace App\MessageHandler;
 
+use App\Entity\Media;
 use App\Entity\MediaFile;
+use App\Entity\MediaStatus;
 use App\Entity\MediaType;
+use App\Entity\Project;
+use App\Entity\ProjectStatus;
 use App\Message\EncodeMessage;
 use App\Message\MediaSplitMessage;
-use App\Repository\MediaFileRepository;
+use App\Repository\ProjectRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -18,12 +22,11 @@ use Symfony\Component\Messenger\MessageBusInterface;
 #[AsMessageHandler]
 class MediaSplitMessageHandler
 {
-    private string $splitOutputDir = 'fragments';
-
     public function __construct(
         private LoggerInterface $logger,
-        private $vidCruncherVideosRoot,
-        private MediaFileRepository $mediaFileRepository,
+        private readonly string $vidCruncherVideosRoot,
+        private readonly string $vidCruncherVideoFragmentsPath,
+        private ProjectRepository $projectRepository,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
         private Filesystem $filesystem,
@@ -34,19 +37,24 @@ class MediaSplitMessageHandler
 
     public function __invoke(MediaSplitMessage $mediaSplitMessage)
     {
+        /** @var Project $project */
+        $project = $this->projectRepository->find($mediaSplitMessage->getProjectId());
+        $profile = $project->getProfile();
+
+        $project->setStatus(ProjectStatus::Splitting);
+        $this->entityManager->flush();
+
         // NOTE: This handler assumes it's working locally with the files and should only be run on the coordinator.
         // Running this on a remote worker will fail.
-        /** @var MediaFile $mediaFile */
-        $mediaFile = $this->mediaFileRepository->find($mediaSplitMessage->getMediaFileId());
+        $mediaFilePath = new \SplFileInfo($mediaSplitMessage->getOriginalVideoPath());
 
-        $mediaFilePath = new \SplFileInfo($mediaFile->getMediaPath());
-        $outputDir = sprintf('%s/%s', $this->vidCruncherVideosRoot, $this->splitOutputDir);
+        $outputDir = sprintf('%s/%s', $this->vidCruncherVideosRoot, $this->vidCruncherVideoFragmentsPath);
         if (!is_dir($outputDir)) {
             mkdir($outputDir);
         }
         $cmd = sprintf(
             'ffmpeg -y -i "%s" -map 0 -c copy -f segment -segment_time 60s "%s/%s-%%03d.%s"',
-            $mediaFile->getMediaPath(),
+            $mediaFilePath->getRealPath(),
             $outputDir,
             $mediaFilePath->getBasename(),
             $mediaFilePath->getExtension()
@@ -64,19 +72,25 @@ class MediaSplitMessageHandler
             ->in($outputDir)
             ->sortByName();
 
-        $profile = $mediaFile->getMedia()->getProject()->getProfile();
+
 
         foreach ($finder as $file) {
+            $newMedia = new Media();
+            $newMedia->setStatus(MediaStatus::Pending);
+            $newMedia->setProject($project);
+
             $newMediaFile = new MediaFile();
             $newMediaFile->setMediaType(MediaType::VideoFragment);
-            $newMediaFile->setMedia($mediaFile->getMedia());
+            $newMediaFile->setMedia($newMedia);
             $newMediaFile->setMediaPath($file->getRealPath());
 
+            $this->entityManager->persist($newMedia);
             $this->entityManager->persist($newMediaFile);
             $this->entityManager->flush();
 
             $this->messageBus->dispatch(
                 new EncodeMessage(
+                    $newMedia->getId(),
                     $newMediaFile->getId(),
                     sprintf('%s/%s', $this->vidCruncherCoordinatorBaseUrl,
                         $this->filesystem->makePathRelative(
@@ -84,10 +98,16 @@ class MediaSplitMessageHandler
                             $this->parameterBag->get('kernel.project_dir') . '/public'
                         )
                     ),
+                    $file->getBasename(),
                     $profile->getPreset(),
                     $profile->getCrf()
                 )
             );
         }
+
+        // Set the project to processing.
+        $project->setStatus(ProjectStatus::Processing);
+        $this->entityManager->flush();
+
     }
 }

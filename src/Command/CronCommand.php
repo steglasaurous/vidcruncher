@@ -33,7 +33,6 @@ class CronCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        // FIXME: COntinue here - create services this thing will call.
         $io = new SymfonyStyle($input, $output);
         $io->info('Scanning profiles....');
 
