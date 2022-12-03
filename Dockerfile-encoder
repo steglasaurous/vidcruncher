@@ -1,0 +1,12 @@
+FROM ubuntu:kinetic
+# Encoder - needs PHP CLI and FFMPEG 5.1.1+, so using ubuntu's latest which includes what we need.
+ENV DEBIAN_FRONTEND=noninteractive 
+ENV DEBCONF_NONINTERACTIVE_SEEN=true
+COPY docker/encoder/preseed.txt /preseed.txt
+RUN debconf-set-selections /preseed.txt
+
+RUN apt-get -y update && apt-get -y install ffmpeg php-cli php-pdo-pgsql php-curl php-xml composer
+RUN mkdir -p /var/www/html
+COPY . /var/www/html
+#CMD ["/var/www/html/bin/console", "app:cron"]
+CMD [ "/var/www/html/bin/console", "messenger:consume", "async", "-vv" ]
