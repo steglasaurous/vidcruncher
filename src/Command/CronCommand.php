@@ -2,14 +2,11 @@
 
 namespace App\Command;
 
-use App\Message\EncodeMessage;
-use App\MessageHandler\EncodeMessageHandler;
+use App\Service\AssemblyScanner;
 use App\Service\InputPathScanner;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -20,7 +17,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class CronCommand extends Command
 {
     public function __construct(
-        private InputPathScanner $inputPathScanner
+        private InputPathScanner $inputPathScanner,
+        private AssemblyScanner $assemblyScanner
     )
     {
         parent::__construct();
@@ -38,8 +36,11 @@ class CronCommand extends Command
 
         $this->inputPathScanner->scanAll();
 
-        $io->success('Done.');
+        $io->info('Checking for assemblies....');
+        $this->assemblyScanner->assembleReadyProjects();
 
+        // CONTINUE HERE: Test assembly scanner works
+        // FIXME: Put waiting logic here, wrap in a loop.
         return Command::SUCCESS;
     }
 }

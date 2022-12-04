@@ -13,7 +13,7 @@ enum ProjectStatus: string {
     case Splitting = 'splitting';
     case Processing = 'processing';
     case ReadyForAssembly = 'ready_for_assembly';
-    case Assembing = 'assembing';
+    case Assembling = 'assembling';
     case Done = 'done';
     case Failed = 'failed';
 }

@@ -22,6 +22,9 @@ class Media {
     #[ORM\Column]
     private int $id;
 
+    #[ORM\Column]
+    private \DateTime $added;
+
     #[ORM\Column(nullable: true)]
     private \DateTime $start;
 
@@ -45,6 +48,7 @@ class Media {
 
     public function __construct() {
         $this->mediaFiles = new ArrayCollection();
+        $this->added = new \DateTime();
     }
 
     public function getId(): int
@@ -55,6 +59,17 @@ class Media {
     public function setId(int $id): Media
     {
         $this->id = $id;
+        return $this;
+    }
+
+    public function getAdded(): \DateTime
+    {
+        return $this->added;
+    }
+
+    public function setAdded(\DateTime $added): Media
+    {
+        $this->added = $added;
         return $this;
     }
 
