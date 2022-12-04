@@ -13,11 +13,14 @@ This run an API and database to coordinate actions.  To get running:
 
 ```dotenv
 DATABASE_URL="postgresql://app:!ChangeMe!@db:5432/app?serverVersion=14&charset=utf8"
+
+# URL to the coordinator - used for downloading and uploading video data and generating URLs
+COORDINATOR_BASE_URL=http://10.0.0.79:8000
 ```
 
 2. `composer install` - to install the vendor libs  # Requires PHP and composer to be installed on the host
 3. `bin/console doc:mig:mig` - to setup the database # Requires PHP and composer to be installed on the host. 
-2. `docker compose up -d` - Will build and start the web and db containers.
+4. `docker compose up -d` - Will build and start the web and db containers.
 
 ## Encoder
 
@@ -47,3 +50,11 @@ For live-recordings, set files to be dropped into public/videos/live-recordings.
 
 After files are processed, their fully-assembed results are placed in public/videos/done
 
+
+# TODOs
+
+- [ ] Build assembler handler
+- [ ] Build assembler decision into cron
+- [ ] Build docker container that runs the cron
+- [ ] Alter cron to block and run once per minute
+- [ ] Test live recordings
