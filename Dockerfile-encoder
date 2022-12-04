@@ -9,4 +9,4 @@ RUN apt-get -y update && apt-get -y install ffmpeg php-cli php-pdo-pgsql php-cur
 RUN mkdir -p /var/www/html
 COPY . /var/www/html
 #CMD ["/var/www/html/bin/console", "app:cron"]
-CMD [ "/var/www/html/bin/console", "messenger:consume", "async", "-vv" ]
+CMD [ "php", "/var/www/html/bin/console", "messenger:consume", "encoder", "-vv" ]
