@@ -88,16 +88,24 @@ class MediaSplitMessageHandler
             $this->entityManager->persist($newMediaFile);
             $this->entityManager->flush();
 
+
+            $mediaFileUrl = sprintf(
+                '%s/%s', 
+                $this->vidCruncherCoordinatorBaseUrl,
+                str_replace(' ', '%20', 
+                    $this->filesystem->makePathRelative(
+                        $newMediaFile->getMediaPath(),
+                        $this->parameterBag->get('kernel.project_dir') . '/public'
+                    )
+                )
+            );
+            $mediaFileUrl = substr($mediaFileUrl, 0, strlen($mediaFileUrl) - 1);
+
             $this->messageBus->dispatch(
                 new EncodeMessage(
                     $newMedia->getId(),
                     $newMediaFile->getId(),
-                    sprintf('%s/%s', $this->vidCruncherCoordinatorBaseUrl,
-                        $this->filesystem->makePathRelative(
-                            $newMediaFile->getMediaPath(),
-                            $this->parameterBag->get('kernel.project_dir') . '/public'
-                        )
-                    ),
+                    $mediaFileUrl,
                     $file->getBasename(),
                     $profile->getPreset(),
                     $profile->getCrf()
