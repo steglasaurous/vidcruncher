@@ -70,7 +70,8 @@ class AssembleMessageHandler
         }
 
         $this->filesystem->dumpFile($textFilePath, $outputFileContent);
-// the FFMpeg PHP side doesn't include copying all audio tracks, so using the command directly instead.
+
+        // the FFMpeg PHP side doesn't include copying all audio tracks, so using the command directly instead.
         $cmd = sprintf('ffmpeg -hide_banner -y -f concat -safe 0 -i "%s" -c copy -map 0 "%s"', $textFilePath, $finalOutputFile);
 
         exec($cmd,$cmdOutput, $cmdResult);
