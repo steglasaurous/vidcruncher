@@ -66,12 +66,12 @@ class AssembleMessageHandler
         $textFilePath = sprintf('%s.txt',  $finalOutputFile);
         $outputFileContent = '';
         foreach ($outputFiles as $outputFile) {
-            $outputFileContent .= sprintf("file '%'\n",$outputFile);
+            $outputFileContent .= sprintf("file '%s'\n", $outputFile);
         }
 
         $this->filesystem->dumpFile($textFilePath, $outputFileContent);
 
-        $cmd = sprintf('ffmpeg -f concat -safe 0 -i "%s" -c copy -map 0 "%s"', $textFilePath, $finalOutputFile);
+        $cmd = sprintf('ffmpeg -hide_banner -y -f concat -safe 0 -i "%s" -c copy -map 0 "%s"', $textFilePath, $finalOutputFile);
 
         exec($cmd,$cmdOutput, $cmdResult);
         if ($cmdResult > 0) {
@@ -90,8 +90,6 @@ class AssembleMessageHandler
 //                sprintf('%s/%s/%s',  $this->vidCruncherVideosRoot, $project->getProfile()->getOutputPath(), $project->getOutputFilename()),
 //                true
 //            );
-
-
 
         $project->setStatus(ProjectStatus::Done);
 
