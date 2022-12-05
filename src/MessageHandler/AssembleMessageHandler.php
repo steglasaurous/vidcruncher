@@ -27,12 +27,12 @@ use Symfony\Component\Messenger\MessageBusInterface;
 class AssembleMessageHandler
 {
     public function __construct(
-        private ProjectRepository $projectRepository,
-        private EntityManagerInterface $entityManager,
-        private FFMpeg $FFMpeg,
-        private string $vidCruncherVideosRoot,
-        private string $vidCruncherVideoFragmentsPath,
-        private LoggerInterface $logger
+        private readonly ProjectRepository      $projectRepository,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly string                 $vidCruncherVideosRoot,
+        private readonly string                 $vidCruncherVideoFragmentsPath,
+        private readonly LoggerInterface        $logger,
+        private readonly Filesystem             $filesystem,
     )
     {
     }
@@ -60,13 +60,38 @@ class AssembleMessageHandler
             $outputFiles[] = sprintf('%s/%s/%s', $this->vidCruncherVideosRoot, $this->vidCruncherVideoFragmentsPath, $mediaFile->getMediaPath());
         }
 
-        // Sort based on filename so we get the correct order.
+        // Sort based on filename, so we get the correct order.
         sort($outputFiles);
+        $finalOutputFile = sprintf('%s/%s/%s',  $this->vidCruncherVideosRoot, $project->getProfile()->getOutputPath(), $project->getOutputFilename());
+        $textFilePath = sprintf('%s.txt',  $finalOutputFile);
+        $outputFileContent = '';
+        foreach ($outputFiles as $outputFile) {
+            $outputFileContent .= sprintf("file '%'\n",$outputFile);
+        }
 
-        $video = $this->FFMpeg->open($outputFiles[0]);
-        $video
-            ->concat($outputFiles)
-            ->saveFromSameCodecs(sprintf('%s/%s/%s',  $this->vidCruncherVideosRoot, $project->getProfile()->getOutputPath(), $project->getOutputFilename()));
+        $this->filesystem->dumpFile($textFilePath, $outputFileContent);
+
+        $cmd = sprintf('ffmpeg -f concat -safe 0 -i "%s" -c copy -map 0 "%s"', $textFilePath, $finalOutputFile);
+
+        exec($cmd,$cmdOutput, $cmdResult);
+        if ($cmdResult > 0) {
+            // FFMPEG blew up somewhere. Throw an exception about it.
+            $this->logger->error('FFMpeg returned non-zero result while assembling.');
+            $this->logger->debug(join("\n",$cmdOutput));
+
+            throw new \Exception('FFMPEG returned non-zero result.');
+        }
+
+        // the FFMpeg PHP side doesn't include copying all audio tracks, so using the command directly instead.
+//        $video = $this->FFMpeg->open($outputFiles[0]);
+//        $video
+//            ->concat($outputFiles)
+//            ->saveFromSameCodecs(
+//                sprintf('%s/%s/%s',  $this->vidCruncherVideosRoot, $project->getProfile()->getOutputPath(), $project->getOutputFilename()),
+//                true
+//            );
+
+
 
         $project->setStatus(ProjectStatus::Done);
 
