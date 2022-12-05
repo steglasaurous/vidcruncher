@@ -70,7 +70,7 @@ class AssembleMessageHandler
         }
 
         $this->filesystem->dumpFile($textFilePath, $outputFileContent);
-
+// the FFMpeg PHP side doesn't include copying all audio tracks, so using the command directly instead.
         $cmd = sprintf('ffmpeg -hide_banner -y -f concat -safe 0 -i "%s" -c copy -map 0 "%s"', $textFilePath, $finalOutputFile);
 
         exec($cmd,$cmdOutput, $cmdResult);
@@ -82,14 +82,8 @@ class AssembleMessageHandler
             throw new \Exception('FFMPEG returned non-zero result.');
         }
 
-        // the FFMpeg PHP side doesn't include copying all audio tracks, so using the command directly instead.
-//        $video = $this->FFMpeg->open($outputFiles[0]);
-//        $video
-//            ->concat($outputFiles)
-//            ->saveFromSameCodecs(
-//                sprintf('%s/%s/%s',  $this->vidCruncherVideosRoot, $project->getProfile()->getOutputPath(), $project->getOutputFilename()),
-//                true
-//            );
+
+        $this->filesystem->remove($textFilePath);
 
         $project->setStatus(ProjectStatus::Done);
 
