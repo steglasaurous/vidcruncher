@@ -50,11 +50,20 @@ For live-recordings, set files to be dropped into public/videos/live-recordings.
 
 After files are processed, their fully-assembed results are placed in public/videos/done
 
+# Stopping encoders
+
+To gracefully stop encoder containers, use the following command:
+
+```
+docker compose -f docker-compose-encoder.yml exec encoder php /var/www/html/bin/console messenger:stop-workers
+```
+
+This will send a signal to the worker to stop after processing the current message, if any.
 
 # TODOs
 
-- [ ] Build assembler handler
-- [ ] Build assembler decision into cron
+- [x] Build assembler handler
+- [x] Build assembler decision into cron
 - [ ] Build docker container that runs the cron
 - [ ] Alter cron to block and run once per minute
 - [ ] Test live recordings
