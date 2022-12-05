@@ -33,7 +33,7 @@ class AssemblyScanner
                     return $media->getStatus() !== MediaStatus::Done;
                 });
 
-                if (count($remainingMedia) < 1) {
+                if (count($remainingMedia) < 1 && count($project->getMedia()) > 0) {
                     // Everything's encoded.  Check the profile first before executing assembly.
                     // FIXME: Implement this nicely
                     //$assembleAfterTime = $project->getProfile()->getAssembleAfterTime();

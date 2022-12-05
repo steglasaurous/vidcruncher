@@ -66,7 +66,7 @@ class AssembleMessageHandler
         $video = $this->FFMpeg->open($outputFiles[0]);
         $video
             ->concat($outputFiles)
-            ->saveFromSameCodecs(sprintf('%s/%s',  $this->vidCruncherVideosRoot, $project->getProfile()->getOutputPath()));
+            ->saveFromSameCodecs(sprintf('%s/%s/%s',  $this->vidCruncherVideosRoot, $project->getProfile()->getOutputPath(), $project->getOutputFilename()));
 
         $project->setStatus(ProjectStatus::Done);
 

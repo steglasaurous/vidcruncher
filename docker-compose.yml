@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
       POSTGRES_USER: ${POSTGRES_USER:-app}
     ports:
-      - 5432:5432
+      - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data:rw
       # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
@@ -21,7 +21,7 @@ services:
     volumes:
       - .:/var/www/html # For DEV - for the image, this can be built and mashed in.
     ports:
-      - 8000:80
+      - "8000:80"
 
 volumes:
 ###> doctrine/doctrine-bundle ###

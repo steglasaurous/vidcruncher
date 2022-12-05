@@ -52,8 +52,10 @@ class MediaSplitMessageHandler
         if (!is_dir($outputDir)) {
             mkdir($outputDir);
         }
+
+        // -map 0:v and -map 0:a will copy video and audio streams, and discard others. (ex: gopro recordings include streams of metadata of some sort - not needed for final product)
         $cmd = sprintf(
-            'ffmpeg -y -i "%s" -map 0 -c copy -f segment -segment_time 60s "%s/%s-%%03d.%s"',
+            'ffmpeg -y -i "%s" -map 0:v -map 0:a -c copy -write_tmcd 0 -f segment -segment_time 60s "%s/%s-%%03d.%s"',
             $mediaFilePath->getRealPath(),
             $outputDir,
             $mediaFilePath->getBasename(),
