@@ -17,13 +17,35 @@ services:
       # - ./docker/db/data:/var/lib/postgresql/data:rw
 ###< doctrine/doctrine-bundle ###
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: ./web.Dockerfile
     volumes:
-      - .:/var/www/html # For DEV - for the image, this can be built and mashed in.
+      - ./public/videos:/var/www/html/public/videos
+      - ./.env.local:/var/www/html/.env.local
+
     ports:
       - "8000:80"
+
+  cron:
+    build:
+      context: .
+      dockerfile: ./cron.Dockerfile
+    volumes:
+      - ./public/videos:/var/www/html/public/videos
+      - ./.env.local:/var/www/html/.env.local
+
+  encoder:
+    build:
+      context: .
+      dockerfile: ./encoder.Dockerfile
+    volumes:
+      - ./.env.local:/var/www/html/.env.local
+      - encoder_var:/var/www/html/var
 
 volumes:
 ###> doctrine/doctrine-bundle ###
   db-data:
+  encoder_var:
+
 ###< doctrine/doctrine-bundle ###
