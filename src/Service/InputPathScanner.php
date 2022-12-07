@@ -8,6 +8,7 @@ use App\Entity\MediaType;
 use App\Entity\Profile;
 use App\Entity\Project;
 use App\Entity\ProjectStatus;
+use App\Message\EncodeMessage;
 use App\Message\MediaSplitMessage;
 use App\Repository\ProfileRepository;
 use App\Repository\ProjectRepository;
@@ -17,6 +18,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use FFMpeg\Exception\RuntimeException;
 use FFMpeg\FFProbe;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
@@ -27,6 +29,8 @@ class InputPathScanner {
         private readonly string                 $vidCruncherVideosRoot,
         private readonly int                    $vidCruncherSplitThresholdSeconds,
         private readonly string                 $vidCruncherVideoFragmentsPath,
+        private readonly string                 $vidCruncherCoordinatorBaseUrl,
+        private readonly ParameterBagInterface  $parameterBag,
         private readonly ProfileRepository      $profileRepository,
         private readonly ProjectRepository      $projectRepository,
         private readonly EntityManagerInterface $entityManager,
@@ -147,6 +151,29 @@ class InputPathScanner {
         $project->setStatus(ProjectStatus::Processing);
 
         $this->entityManager->flush();
+
+        $mediaFileUrl = sprintf(
+            '%s/%s',
+            $this->vidCruncherCoordinatorBaseUrl,
+            str_replace(' ', '%20',
+                $this->filesystem->makePathRelative(
+                    $mediaFile->getMediaPath(),
+                    $this->parameterBag->get('kernel.project_dir') . '/public'
+                )
+            )
+        );
+        $mediaFileUrl = substr($mediaFileUrl, 0, strlen($mediaFileUrl) - 1);
+
+        $this->messageBus->dispatch(
+            new EncodeMessage(
+                $media->getId(),
+                $mediaFile->getId(),
+                $mediaFileUrl,
+                $file->getBasename(),
+                $profile->getPreset(),
+                $profile->getCrf()
+            )
+        );
 
         $this->logger->debug(sprintf('Processed file %s', $file->getFilename()));
     }
