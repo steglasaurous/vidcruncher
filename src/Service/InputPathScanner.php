@@ -81,10 +81,13 @@ class InputPathScanner {
             $criteria->where(new Comparison('status', Comparison::IN, [ProjectStatus::Pending, ProjectStatus::Processing, ProjectStatus::ReadyForAssembly]));
             $criteria->andWhere(new Comparison('profile', Comparison::EQ, $profile));
 
-            $project = $this->projectRepository->createQueryBuilder('p')
+            $projectResult = $this->projectRepository->createQueryBuilder('p')
                 ->addCriteria($criteria)
                 ->getQuery()
                 ->execute();
+            if (count($projectResult) > 0) {
+                $project = $projectResult[0];
+            }
 
         } else {
             // For non-live profiles, if the project's created, that's enough and can ignore it moving forward.
