@@ -30,6 +30,9 @@ services:
 
     FFMpeg\FFMpeg:
         factory: ['FFMpeg\FFMpeg', 'create']
+        arguments:
+            - timeout: 3600
+            - "@logger"
 
     FFMpeg\FFProbe:
         factory: ['FFMpeg\FFProbe', 'create']
