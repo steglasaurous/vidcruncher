@@ -4,6 +4,7 @@ services:
 ###> doctrine/doctrine-bundle ###
   database:
     image: postgres:${POSTGRES_VERSION:-14}-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-app}
       # You should definitely change the password in production
@@ -26,7 +27,9 @@ services:
 
     ports:
       - "8000:80"
-
+    restart: unless-stopped
+    depends_on:
+      - database
   cron:
     build:
       context: .
@@ -34,6 +37,9 @@ services:
     volumes:
       - ./public/videos:/var/www/html/public/videos
       - ./.env.local:/var/www/html/.env.local
+    restart: unless-stopped
+    depends_on:
+      - database
 
   encoder:
     build:
@@ -42,6 +48,7 @@ services:
     volumes:
       - ./.env.local:/var/www/html/.env.local
       - encoder_var:/var/www/html/var
+    restart: unless-stopped
 
 volumes:
 ###> doctrine/doctrine-bundle ###

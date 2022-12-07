@@ -8,6 +8,7 @@ RUN apt-get -y update && apt-get -y install ffmpeg git unzip \
 
 COPY ./docker/common/conf.d/upload.ini $PHP_INI_DIR/conf.d/upload.ini
 COPY ./docker/cron/run.sh /run.sh
+COPY ./docker/common/wait-for-it.sh /wait-for-it.sh
 ADD . /var/www/html
 
 RUN cd /var/www/html \
@@ -18,4 +19,5 @@ RUN cd /var/www/html \
     && ls -l \
     && php composer.phar -n install
 
-CMD ["/bin/bash", "-c", "/run.sh"]
+#CMD ["/bin/bash", "-c", "/run.sh"]
+CMD ["/wait-for-it.sh", "database:5432", "--", "/run.sh"]

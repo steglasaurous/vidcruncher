@@ -22,7 +22,7 @@ class Media {
     #[ORM\Column]
     private int $id;
 
-    #[ORM\Column]
+    #[ORM\Column(options: ['default' => 'now()'])]
     private \DateTime $added;
 
     #[ORM\Column(nullable: true)]
