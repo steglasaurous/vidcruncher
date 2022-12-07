@@ -137,7 +137,7 @@ class InputPathScanner {
 
         $mediaFile = new MediaFile();
         $mediaFile->setMedia($media);
-        $mediaFile->setMediaPath($file->getRealPath());
+        $mediaFile->setMediaPath($newFilePath);
         $mediaFile->setMediaType(MediaType::VideoFragment);
 
         $this->entityManager->persist($media);
