@@ -41,7 +41,22 @@ class EncodeMessageHandler {
         $format->setPreset($encodeMessage->getPreset());
         $format->setAudioCodec('copy');
 
-        $encode = $this->FFMpeg->openAdvanced([$encodeMessage->getMediaFileUrl()]);
+        // Download the file locally (using ffmpeg to stream it incrementally seems to fail consistently)
+        $response = $this->coordinatorClient->request('GET', $encodeMessage->getMediaFileUrl());
+
+        if ($response->getStatusCode() < 200 || $response->getStatusCode() > 399) {
+            throw new \Exception('Failed to retrieve the original file: ' . $response->getStatusCode());
+        }
+
+        $originalFile = sprintf('%s/original-%s' , $outputDir, $encodeMessage->getMediaFileName());
+        $fp = fopen($originalFile, 'w');
+        foreach ($this->coordinatorClient->stream($response) as $chunk) {
+            fwrite($fp, $chunk->getContent());
+        }
+
+        fclose($fp);
+
+        $encode = $this->FFMpeg->openAdvanced([$originalFile]);
         $encode->map(['0'],$format,$outputFile);
 
         // Push to the API for this media file that it's being processed.
@@ -85,7 +100,8 @@ class EncodeMessageHandler {
         ]);
         // Delete the output file since it was uploaded successfully.
         $this->filesystem->remove($outputFile);
+        $this->filesystem->remove($originalFile);
 
-        $this->logger->info('Deleted output file');
+        $this->logger->info('Deleted files');
     }
 }
