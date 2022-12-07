@@ -41,13 +41,6 @@ class EncodeMessageHandler {
         $format->setPreset($encodeMessage->getPreset());
         $format->setAudioCodec('copy');
 
-        // Download the file locally (using ffmpeg to stream it incrementally seems to fail consistently)
-        $response = $this->coordinatorClient->request('GET', $encodeMessage->getMediaFileUrl());
-
-        if ($response->getStatusCode() < 200 || $response->getStatusCode() > 399) {
-            throw new \Exception('Failed to retrieve the original file: ' . $response->getStatusCode());
-        }
-
         $encode = $this->FFMpeg->openAdvanced([$encodeMessage->getMediaFileUrl()]);
         $encode->map(['0'],$format,$outputFile);
 
