@@ -48,15 +48,7 @@ class EncodeMessageHandler {
             throw new \Exception('Failed to retrieve the original file: ' . $response->getStatusCode());
         }
 
-        $originalFile = sprintf('%s/original-%s' , $outputDir, $encodeMessage->getMediaFileName());
-        $fp = fopen($originalFile, 'w');
-        foreach ($this->coordinatorClient->stream($response) as $chunk) {
-            fwrite($fp, $chunk->getContent());
-        }
-
-        fclose($fp);
-
-        $encode = $this->FFMpeg->openAdvanced([$originalFile]);
+        $encode = $this->FFMpeg->openAdvanced([$encodeMessage->getMediaFileUrl()]);
         $encode->map(['0'],$format,$outputFile);
 
         // Push to the API for this media file that it's being processed.
@@ -75,7 +67,6 @@ class EncodeMessageHandler {
 
         $encode->save();
 
-        // FIXME: Next step: Implement file uploader in API so the result can be sent back to the coordinator.
         $formFields = [
             'mediaType' => 'output_video',
             'media' => sprintf('/api/media/%s', $encodeMessage->getMediaId()),
@@ -100,7 +91,6 @@ class EncodeMessageHandler {
         ]);
         // Delete the output file since it was uploaded successfully.
         $this->filesystem->remove($outputFile);
-        $this->filesystem->remove($originalFile);
 
         $this->logger->info('Deleted files');
     }
