@@ -19,14 +19,8 @@ class CronCommand extends Command
     public function __construct(
         private InputPathScanner $inputPathScanner,
         private AssemblyScanner $assemblyScanner
-    )
-    {
+    ) {
         parent::__construct();
-    }
-
-    protected function configure(): void
-    {
-
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -39,8 +33,6 @@ class CronCommand extends Command
         $io->info('Checking for assemblies....');
         $this->assemblyScanner->assembleReadyProjects();
 
-        // CONTINUE HERE: Test assembly scanner works
-        // FIXME: Put waiting logic here, wrap in a loop.
         return Command::SUCCESS;
     }
 }

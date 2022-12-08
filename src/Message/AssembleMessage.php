@@ -1,10 +1,12 @@
 <?php
+
 namespace App\Message;
 
-class AssembleMessage {
+class AssembleMessage
+{
     public function __construct(
         /**
-         * Project this video's fragments should be added to
+         * Project this video's fragments should be added to.
          */
         private readonly int $projectId,
     ) {

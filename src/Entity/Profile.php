@@ -1,14 +1,15 @@
 <?php
+
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
 use App\Repository\ProfileRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-
 #[ORM\Entity(repositoryClass: ProfileRepository::class)]
 #[ApiResource]
-class Profile {
+class Profile
+{
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -46,9 +47,10 @@ class Profile {
         return $this->id;
     }
 
-    public function setId(int $id): Profile
+    public function setId(int $id): self
     {
         $this->id = $id;
+
         return $this;
     }
 
@@ -57,9 +59,10 @@ class Profile {
         return $this->name;
     }
 
-    public function setName(string $name): Profile
+    public function setName(string $name): self
     {
         $this->name = $name;
+
         return $this;
     }
 
@@ -68,9 +71,10 @@ class Profile {
         return $this->preset;
     }
 
-    public function setPreset(int $preset): Profile
+    public function setPreset(int $preset): self
     {
         $this->preset = $preset;
+
         return $this;
     }
 
@@ -79,9 +83,10 @@ class Profile {
         return $this->crf;
     }
 
-    public function setCrf(int $crf): Profile
+    public function setCrf(int $crf): self
     {
         $this->crf = $crf;
+
         return $this;
     }
 
@@ -90,9 +95,10 @@ class Profile {
         return $this->inputPath;
     }
 
-    public function setInputPath(string $inputPath): Profile
+    public function setInputPath(string $inputPath): self
     {
         $this->inputPath = $inputPath;
+
         return $this;
     }
 
@@ -101,9 +107,10 @@ class Profile {
         return $this->outputPath;
     }
 
-    public function setOutputPath(string $outputPath): Profile
+    public function setOutputPath(string $outputPath): self
     {
         $this->outputPath = $outputPath;
+
         return $this;
     }
 
@@ -112,9 +119,10 @@ class Profile {
         return $this->isLiveRecordings;
     }
 
-    public function setIsLiveRecordings(bool $isLiveRecordings): Profile
+    public function setIsLiveRecordings(bool $isLiveRecordings): self
     {
         $this->isLiveRecordings = $isLiveRecordings;
+
         return $this;
     }
 
@@ -123,9 +131,10 @@ class Profile {
         return $this->processModifiedOlderThan;
     }
 
-    public function setProcessModifiedOlderThan(int $processModifiedOlderThan): Profile
+    public function setProcessModifiedOlderThan(int $processModifiedOlderThan): self
     {
         $this->processModifiedOlderThan = $processModifiedOlderThan;
+
         return $this;
     }
 
@@ -134,9 +143,10 @@ class Profile {
         return $this->assembleAfterTime;
     }
 
-    public function setAssembleAfterTime(int $assembleAfterTime): Profile
+    public function setAssembleAfterTime(int $assembleAfterTime): self
     {
         $this->assembleAfterTime = $assembleAfterTime;
+
         return $this;
     }
 
@@ -145,9 +155,10 @@ class Profile {
         return $this->isActive;
     }
 
-    public function setIsActive(bool $isActive): Profile
+    public function setIsActive(bool $isActive): self
     {
         $this->isActive = $isActive;
+
         return $this;
     }
 }

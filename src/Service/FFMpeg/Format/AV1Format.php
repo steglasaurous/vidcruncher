@@ -5,13 +5,14 @@ namespace App\Service\FFMpeg\Format;
 use FFMpeg\Exception\InvalidArgumentException;
 use FFMpeg\Format\Video\DefaultVideo;
 
-class AV1Format extends DefaultVideo {
-
+class AV1Format extends DefaultVideo
+{
     private $preset = 8;
 
     private $crf = 40;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->setVideoCodec('libsvtav1');
     }
 
@@ -30,7 +31,8 @@ class AV1Format extends DefaultVideo {
         return ['libsvtav1'];
     }
 
-    public function setPreset(int $preset): self {
+    public function setPreset(int $preset): self
+    {
         if ($preset > 10 || $preset < 1) {
             throw new InvalidArgumentException('Preset must be between 1-10');
         }
@@ -40,7 +42,8 @@ class AV1Format extends DefaultVideo {
         return $this;
     }
 
-    public function setCrf(int $crf): self {
+    public function setCrf(int $crf): self
+    {
         $this->crf = $crf;
 
         return $this;
@@ -48,7 +51,7 @@ class AV1Format extends DefaultVideo {
 
     public function getAdditionalParameters()
     {
-        $additionalParameters = $this->additionalParamaters;
+        $additionalParameters   = $this->additionalParamaters;
         $additionalParameters[] = '-preset';
         $additionalParameters[] = $this->preset;
         $additionalParameters[] = '-crf';

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
@@ -7,16 +8,18 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-enum MediaStatus: string {
-    case Pending = 'pending';
+enum MediaStatus: string
+{
+    case Pending    = 'pending';
     case Processing = 'processing';
-    case Done = 'done';
-    case Failed = 'failed';
+    case Done       = 'done';
+    case Failed     = 'failed';
 }
 
 #[ApiResource]
 #[ORM\Entity(repositoryClass: MediaRepository::class)]
-class Media {
+class Media
+{
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -37,7 +40,6 @@ class Media {
     #[ORM\Column(nullable: true)]
     private string $workerName;
 
-
     #[ORM\ManyToOne(targetEntity: Project::class, inversedBy: 'media')]
     #[ORM\JoinColumn(nullable: false)]
     private Project $project;
@@ -45,10 +47,10 @@ class Media {
     #[ORM\OneToMany(mappedBy: 'media', targetEntity: MediaFile::class)]
     private Collection $mediaFiles;
 
-
-    public function __construct() {
+    public function __construct()
+    {
         $this->mediaFiles = new ArrayCollection();
-        $this->added = new \DateTime();
+        $this->added      = new \DateTime();
     }
 
     public function getId(): int
@@ -56,9 +58,10 @@ class Media {
         return $this->id;
     }
 
-    public function setId(int $id): Media
+    public function setId(int $id): self
     {
         $this->id = $id;
+
         return $this;
     }
 
@@ -67,9 +70,10 @@ class Media {
         return $this->added;
     }
 
-    public function setAdded(\DateTime $added): Media
+    public function setAdded(\DateTime $added): self
     {
         $this->added = $added;
+
         return $this;
     }
 
@@ -78,9 +82,10 @@ class Media {
         return $this->start;
     }
 
-    public function setStart(\DateTime $start): Media
+    public function setStart(\DateTime $start): self
     {
         $this->start = $start;
+
         return $this;
     }
 
@@ -89,9 +94,10 @@ class Media {
         return $this->completed;
     }
 
-    public function setCompleted(\DateTime $completed): Media
+    public function setCompleted(\DateTime $completed): self
     {
         $this->completed = $completed;
+
         return $this;
     }
 
@@ -100,9 +106,10 @@ class Media {
         return $this->status;
     }
 
-    public function setStatus(MediaStatus $status): Media
+    public function setStatus(MediaStatus $status): self
     {
         $this->status = $status;
+
         return $this;
     }
 
@@ -111,9 +118,10 @@ class Media {
         return $this->workerName;
     }
 
-    public function setWorkerName(string $workerName): Media
+    public function setWorkerName(string $workerName): self
     {
         $this->workerName = $workerName;
+
         return $this;
     }
 
@@ -122,9 +130,10 @@ class Media {
         return $this->project;
     }
 
-    public function setProject(Project $project): Media
+    public function setProject(Project $project): self
     {
         $this->project = $project;
+
         return $this;
     }
 
@@ -133,13 +142,14 @@ class Media {
         return $this->mediaFiles;
     }
 
-    public function setMediaFiles(Collection $mediaFiles): Media
+    public function setMediaFiles(Collection $mediaFiles): self
     {
         $this->mediaFiles = $mediaFiles;
+
         return $this;
     }
 
-    public function addMediaFile(MediaFile $mediaFile): Media
+    public function addMediaFile(MediaFile $mediaFile): self
     {
         $this->mediaFiles->add($mediaFile);
 

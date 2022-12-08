@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
@@ -12,17 +13,18 @@ use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
-enum MediaType: string {
+enum MediaType: string
+{
     case OriginalVideo =  'original_video';
     case VideoFragment = 'video_fragment';
-    case OutputVideo = 'output_video';
+    case OutputVideo   = 'output_video';
 }
 
 #[ApiResource(
     operations: [
         new GetCollection(),
         new Get(),
-        new Post(inputFormats: ['multipart' => ['multipart/form-data']])
+        new Post(inputFormats: ['multipart' => ['multipart/form-data']]),
     ],
     normalizationContext: ['groups' => ['media_file:read']],
     denormalizationContext: ['groups' => ['media_file:write']]
@@ -34,12 +36,13 @@ enum MediaType: string {
         'id' => new Link(
             fromProperty: 'mediaFiles',
             fromClass: Media::class
-        )
+        ),
     ]
 )]
 #[ORM\Entity(repositoryClass: MediaFileRepository::class)]
 #[Vich\Uploadable]
-class MediaFile {
+class MediaFile
+{
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -59,7 +62,7 @@ class MediaFile {
     #[Groups(['media_file:read'])]
     private ?string $mediaPath = null;
 
-    #[Vich\UploadableField(mapping: "media_file", fileNameProperty: "mediaPath")]
+    #[Vich\UploadableField(mapping: 'media_file', fileNameProperty: 'mediaPath')]
     #[Groups(['media_file:write'])]
     private ?File $file = null;
 
@@ -68,9 +71,10 @@ class MediaFile {
         return $this->id;
     }
 
-    public function setId(int $id): MediaFile
+    public function setId(int $id): self
     {
         $this->id = $id;
+
         return $this;
     }
 
@@ -79,9 +83,10 @@ class MediaFile {
         return $this->media;
     }
 
-    public function setMedia(Media $media): MediaFile
+    public function setMedia(Media $media): self
     {
         $this->media = $media;
+
         return $this;
     }
 
@@ -90,9 +95,10 @@ class MediaFile {
         return $this->mediaType;
     }
 
-    public function setMediaType(MediaType $mediaType): MediaFile
+    public function setMediaType(MediaType $mediaType): self
     {
         $this->mediaType = $mediaType;
+
         return $this;
     }
 
@@ -101,9 +107,10 @@ class MediaFile {
         return $this->mediaPath;
     }
 
-    public function setMediaPath(string $mediaPath): MediaFile
+    public function setMediaPath(string $mediaPath): self
     {
         $this->mediaPath = $mediaPath;
+
         return $this;
     }
 
@@ -112,9 +119,10 @@ class MediaFile {
         return $this->file;
     }
 
-    public function setFile(?File $file): MediaFile
+    public function setFile(?File $file): self
     {
         $this->file = $file;
+
         return $this;
     }
 }

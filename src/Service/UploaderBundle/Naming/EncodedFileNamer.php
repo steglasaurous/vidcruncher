@@ -9,16 +9,12 @@ use Vich\UploaderBundle\Naming\NamerInterface;
 
 final class EncodedFileNamer implements NamerInterface
 {
-    public function __construct()
-    {
-    }
-
     public function name(object $object, PropertyMapping $mapping): string
     {
-        /* @var $file UploadedFile|ReplacingFile */
-        $file = $mapping->getFile($object);
+        /** @var UploadedFile|ReplacingFile $file */
+        $file             = $mapping->getFile($object);
         $originalFileName = new \SplFileInfo($file->getClientOriginalName());
 
-        return sprintf('%s-encoded.%s', $originalFileName->getBasename('.' . $originalFileName->getExtension()), $originalFileName->getExtension());
+        return sprintf('%s-encoded.%s', $originalFileName->getBasename('.'.$originalFileName->getExtension()), $originalFileName->getExtension());
     }
 }

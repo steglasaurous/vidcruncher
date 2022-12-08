@@ -32,8 +32,8 @@ class MediaSplitMessageHandler
         private Filesystem $filesystem,
         private ParameterBagInterface $parameterBag,
         private string $vidCruncherCoordinatorBaseUrl
-    )
-    {}
+    ) {
+    }
 
     public function __invoke(MediaSplitMessage $mediaSplitMessage)
     {
@@ -70,11 +70,10 @@ class MediaSplitMessageHandler
         $finder = new Finder();
         $finder
             ->files()
-            ->name(sprintf('%s-???.%s',$mediaFilePath->getBasename(), $mediaFilePath->getExtension()))
+            ->name(sprintf('%s-???.%s', $mediaFilePath->getBasename(), $mediaFilePath->getExtension()))
             ->in($outputDir)
-            ->sortByName();
-
-
+            ->sortByName()
+        ;
 
         foreach ($finder as $file) {
             $newMedia = new Media();
@@ -90,18 +89,17 @@ class MediaSplitMessageHandler
             $this->entityManager->persist($newMediaFile);
             $this->entityManager->flush();
 
-
             $mediaFileUrl = sprintf(
-                '%s/%s', 
+                '%s/%s',
                 $this->vidCruncherCoordinatorBaseUrl,
-                str_replace(' ', '%20', 
+                str_replace(' ', '%20',
                     $this->filesystem->makePathRelative(
                         $newMediaFile->getMediaPath(),
-                        $this->parameterBag->get('kernel.project_dir') . '/public'
+                        $this->parameterBag->get('kernel.project_dir').'/public'
                     )
                 )
             );
-            $mediaFileUrl = substr($mediaFileUrl, 0, strlen($mediaFileUrl) - 1);
+            $mediaFileUrl = substr($mediaFileUrl, 0, \strlen($mediaFileUrl) - 1);
 
             $this->messageBus->dispatch(
                 new EncodeMessage(
@@ -118,6 +116,5 @@ class MediaSplitMessageHandler
         // Set the project to processing.
         $project->setStatus(ProjectStatus::Processing);
         $this->entityManager->flush();
-
     }
 }

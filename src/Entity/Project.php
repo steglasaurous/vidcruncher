@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
@@ -7,21 +8,21 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-// FIXME: Might make sense to move this to its own file
-enum ProjectStatus: string {
-    case Pending = 'pending';
-    case Splitting = 'splitting';
-    case Processing = 'processing';
+enum ProjectStatus: string
+{
+    case Pending          = 'pending';
+    case Splitting        = 'splitting';
+    case Processing       = 'processing';
     case ReadyForAssembly = 'ready_for_assembly';
-    case Assembling = 'assembling';
-    case Done = 'done';
-    case Failed = 'failed';
+    case Assembling       = 'assembling';
+    case Done             = 'done';
+    case Failed           = 'failed';
 }
-
 
 #[ApiResource]
 #[ORM\Entity(repositoryClass: ProjectRepository::class)]
-class Project {
+class Project
+{
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -52,7 +53,8 @@ class Project {
     #[ORM\OneToMany(targetEntity: Media::class, mappedBy: 'project')]
     private Collection $media;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->media = new ArrayCollection();
     }
 
@@ -61,9 +63,10 @@ class Project {
         return $this->id;
     }
 
-    public function setId(int $id): Project
+    public function setId(int $id): self
     {
         $this->id = $id;
+
         return $this;
     }
 
@@ -72,9 +75,10 @@ class Project {
         return $this->start;
     }
 
-    public function setStart(\DateTime $start): Project
+    public function setStart(\DateTime $start): self
     {
         $this->start = $start;
+
         return $this;
     }
 
@@ -83,9 +87,10 @@ class Project {
         return $this->completed;
     }
 
-    public function setCompleted(\DateTime $completed): Project
+    public function setCompleted(\DateTime $completed): self
     {
         $this->completed = $completed;
+
         return $this;
     }
 
@@ -94,9 +99,10 @@ class Project {
         return $this->status;
     }
 
-    public function setStatus(ProjectStatus $status): Project
+    public function setStatus(ProjectStatus $status): self
     {
         $this->status = $status;
+
         return $this;
     }
 
@@ -105,9 +111,10 @@ class Project {
         return $this->profile;
     }
 
-    public function setProfile(Profile $profile): Project
+    public function setProfile(Profile $profile): self
     {
         $this->profile = $profile;
+
         return $this;
     }
 
@@ -116,9 +123,10 @@ class Project {
         return $this->originFilePath;
     }
 
-    public function setOriginFilePath(string $originFilePath): Project
+    public function setOriginFilePath(string $originFilePath): self
     {
         $this->originFilePath = $originFilePath;
+
         return $this;
     }
 
@@ -127,9 +135,10 @@ class Project {
         return $this->outputFilename;
     }
 
-    public function setOutputFilename(string $outputFilename): Project
+    public function setOutputFilename(string $outputFilename): self
     {
         $this->outputFilename = $outputFilename;
+
         return $this;
     }
 
@@ -138,9 +147,10 @@ class Project {
         return $this->media;
     }
 
-    public function setMedia(Collection $media): Project
+    public function setMedia(Collection $media): self
     {
         $this->media = $media;
+
         return $this;
     }
 }

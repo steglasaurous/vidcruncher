@@ -16,27 +16,27 @@ class AssemblyScanner
     public function __construct(
         private ProjectRepository $projectRepository,
         private MessageBusInterface $messageBus
-    )
-    {
+    ) {
     }
 
-    public function assembleReadyProjects(): void {
+    public function assembleReadyProjects(): void
+    {
         // Check for projects to assemble.
         $criteria = new Criteria();
         $criteria->where(new Comparison('status', Comparison::NIN, [ProjectStatus::Done, ProjectStatus::Failed, ProjectStatus::Assembling]));
 
         $projects = $this->projectRepository->createQueryBuilder('p')->addCriteria($criteria)->getQuery()->execute();
-        if (count($projects) > 0) {
+        if (\count($projects) > 0) {
             /** @var Project $project */
             foreach ($projects as $project) {
-                $remainingMedia = $project->getMedia()->filter(function($media) {
+                $remainingMedia = $project->getMedia()->filter(function ($media) {
                     return $media->getStatus() !== MediaStatus::Done;
                 });
 
-                if (count($remainingMedia) < 1 && count($project->getMedia()) > 0) {
+                if (\count($remainingMedia) < 1 && \count($project->getMedia()) > 0) {
                     // Everything's encoded.  Check the profile first before executing assembly.
                     // FIXME: Implement this nicely
-                    //$assembleAfterTime = $project->getProfile()->getAssembleAfterTime();
+                    // $assembleAfterTime = $project->getProfile()->getAssembleAfterTime();
                     $this->messageBus->dispatch(new AssembleMessage($project->getId()));
                 }
             }

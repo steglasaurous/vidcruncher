@@ -1,6 +1,7 @@
 <?php
 
 namespace App\MessageHandler;
+
 use App\Message\EncodeMessage;
 use App\Service\FFMpeg\Format\AV1Format;
 use FFMpeg\FFMpeg;
@@ -13,7 +14,8 @@ use Symfony\Component\Mime\Part\Multipart\FormDataPart;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[AsMessageHandler]
-class EncodeMessageHandler {
+class EncodeMessageHandler
+{
     private string $hostname;
 
     public function __construct(
@@ -27,10 +29,11 @@ class EncodeMessageHandler {
         $this->hostname = gethostname();
     }
 
-    public function __invoke(EncodeMessage $encodeMessage) {
+    public function __invoke(EncodeMessage $encodeMessage)
+    {
         // We assume AV1 for the codec for the time being.  If I wanna expand later, I should be able to do
         // that here.
-        $outputDir = $this->parameterBag->get('kernel.project_dir') . '/var/videos';
+        $outputDir  = $this->parameterBag->get('kernel.project_dir').'/var/videos';
         $outputFile = sprintf('%s/%s', $outputDir, $encodeMessage->getMediaFileName());
 
         $this->filesystem->mkdir($outputDir);
@@ -42,17 +45,17 @@ class EncodeMessageHandler {
         $format->setAudioCodec('copy');
 
         $encode = $this->FFMpeg->openAdvanced([$encodeMessage->getMediaFileUrl()]);
-        $encode->map(['0'],$format,$outputFile);
+        $encode->map(['0'], $format, $outputFile);
 
         // Push to the API for this media file that it's being processed.
         $start = new \DateTime();
 
-        $updateResponse = $this->coordinatorClient->request('PUT', sprintf('/api/media/%s',$encodeMessage->getMediaId()), [
+        $updateResponse = $this->coordinatorClient->request('PUT', sprintf('/api/media/%s', $encodeMessage->getMediaId()), [
             'json' => [
-                'start' => $start->format(\DateTime::RFC3339),
-                'status' => 'processing',
-                'workerName' => $this->hostname
-            ]
+                'start'      => $start->format(\DateTime::RFC3339),
+                'status'     => 'processing',
+                'workerName' => $this->hostname,
+            ],
         ]);
 
         // Just getting this to throw an exception if there's a problem.
@@ -62,25 +65,25 @@ class EncodeMessageHandler {
 
         $formFields = [
             'mediaType' => 'output_video',
-            'media' => sprintf('/api/media/%s', $encodeMessage->getMediaId()),
-            'file' => DataPart::fromPath($outputFile)
+            'media'     => sprintf('/api/media/%s', $encodeMessage->getMediaId()),
+            'file'      => DataPart::fromPath($outputFile),
         ];
 
         $formData = new FormDataPart($formFields);
         $this->coordinatorClient->request('POST', '/api/media_files', [
             'headers' => $formData->getPreparedHeaders()->toArray(),
-            'body' => $formData->bodyToIterable()
+            'body'    => $formData->bodyToIterable(),
         ]);
 
         $this->logger->info('Uploaded output file.');
         // Update the original media file that it's been completed.
 
-        $completed = new \DateTime();
-        $updateResponse = $this->coordinatorClient->request('PUT', sprintf('/api/media/%s',$encodeMessage->getMediaId()), [
+        $completed      = new \DateTime();
+        $updateResponse = $this->coordinatorClient->request('PUT', sprintf('/api/media/%s', $encodeMessage->getMediaId()), [
             'json' => [
                 'completed' => $completed->format(\DateTime::RFC3339),
-                'status' => 'done'
-            ]
+                'status'    => 'done',
+            ],
         ]);
         // Delete the output file since it was uploaded successfully.
         $this->filesystem->remove($outputFile);

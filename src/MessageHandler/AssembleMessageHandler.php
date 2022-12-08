@@ -4,40 +4,31 @@ namespace App\MessageHandler;
 
 use App\Entity\Media;
 use App\Entity\MediaFile;
-use App\Entity\MediaStatus;
 use App\Entity\MediaType;
 use App\Entity\Project;
 use App\Entity\ProjectStatus;
 use App\Message\AssembleMessage;
-use App\Message\EncodeMessage;
-use App\Message\MediaSplitMessage;
-use App\Repository\MediaFileRepository;
-use App\Repository\MediaRepository;
 use App\Repository\ProjectRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use FFMpeg\FFMpeg;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\Finder\Finder;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
-use Symfony\Component\Messenger\MessageBusInterface;
 
 #[AsMessageHandler]
 class AssembleMessageHandler
 {
     public function __construct(
-        private readonly ProjectRepository      $projectRepository,
+        private readonly ProjectRepository $projectRepository,
         private readonly EntityManagerInterface $entityManager,
-        private readonly string                 $vidCruncherVideosRoot,
-        private readonly string                 $vidCruncherVideoFragmentsPath,
-        private readonly LoggerInterface        $logger,
-        private readonly Filesystem             $filesystem,
-    )
-    {
+        private readonly string $vidCruncherVideosRoot,
+        private readonly string $vidCruncherVideoFragmentsPath,
+        private readonly LoggerInterface $logger,
+        private readonly Filesystem $filesystem,
+    ) {
     }
 
-    public function __invoke(AssembleMessage $assembleMessage) {
+    public function __invoke(AssembleMessage $assembleMessage)
+    {
         $this->logger->debug(sprintf('Assembling project %s', $assembleMessage->getProjectId()));
 
         /** @var Project $project */
@@ -46,14 +37,13 @@ class AssembleMessageHandler
 
         $this->entityManager->flush();
 
-        $medias = $project->getMedia();
+        $medias      = $project->getMedia();
         $outputFiles = [];
 
         /** @var Media $media */
-        foreach ($medias as $media)
-        {
+        foreach ($medias as $media) {
             /** @var MediaFile $mediaFile */
-            $mediaFile = $media->getMediaFiles()->filter(function(MediaFile $file) {
+            $mediaFile = $media->getMediaFiles()->filter(function (MediaFile $file) {
                 return $file->getMediaType() === MediaType::OutputVideo;
             })->first();
 
@@ -62,8 +52,8 @@ class AssembleMessageHandler
 
         // Sort based on filename, so we get the correct order.
         sort($outputFiles);
-        $finalOutputFile = sprintf('%s/%s/%s',  $this->vidCruncherVideosRoot, $project->getProfile()->getOutputPath(), $project->getOutputFilename());
-        $textFilePath = sprintf('%s.txt',  $finalOutputFile);
+        $finalOutputFile   = sprintf('%s/%s/%s', $this->vidCruncherVideosRoot, $project->getProfile()->getOutputPath(), $project->getOutputFilename());
+        $textFilePath      = sprintf('%s.txt', $finalOutputFile);
         $outputFileContent = '';
         foreach ($outputFiles as $outputFile) {
             $outputFileContent .= sprintf("file '%s'\n", $outputFile);
@@ -74,15 +64,14 @@ class AssembleMessageHandler
         // the FFMpeg PHP side doesn't include copying all audio tracks, so using the command directly instead.
         $cmd = sprintf('ffmpeg -hide_banner -y -f concat -safe 0 -i "%s" -c copy -map 0 "%s"', $textFilePath, $finalOutputFile);
 
-        exec($cmd,$cmdOutput, $cmdResult);
+        exec($cmd, $cmdOutput, $cmdResult);
         if ($cmdResult > 0) {
             // FFMPEG blew up somewhere. Throw an exception about it.
             $this->logger->error('FFMpeg returned non-zero result while assembling.');
-            $this->logger->debug(join("\n",$cmdOutput));
+            $this->logger->debug(implode("\n", $cmdOutput));
 
             throw new \Exception('FFMPEG returned non-zero result.');
         }
-
 
         $this->filesystem->remove($textFilePath);
 

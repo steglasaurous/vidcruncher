@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Service;
 
 use App\Entity\Media;
@@ -24,22 +25,22 @@ use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Component\Messenger\MessageBusInterface;
 
-class InputPathScanner {
+class InputPathScanner
+{
     public function __construct(
-        private readonly string                 $vidCruncherVideosRoot,
-        private readonly int                    $vidCruncherSplitThresholdSeconds,
-        private readonly string                 $vidCruncherVideoFragmentsPath,
-        private readonly string                 $vidCruncherCoordinatorBaseUrl,
-        private readonly ParameterBagInterface  $parameterBag,
-        private readonly ProfileRepository      $profileRepository,
-        private readonly ProjectRepository      $projectRepository,
+        private readonly string $vidCruncherVideosRoot,
+        private readonly int $vidCruncherSplitThresholdSeconds,
+        private readonly string $vidCruncherVideoFragmentsPath,
+        private readonly string $vidCruncherCoordinatorBaseUrl,
+        private readonly ParameterBagInterface $parameterBag,
+        private readonly ProfileRepository $profileRepository,
+        private readonly ProjectRepository $projectRepository,
         private readonly EntityManagerInterface $entityManager,
-        private readonly FFProbe                $ffProbe,
-        private readonly LoggerInterface        $logger,
-        private readonly MessageBusInterface    $messageBus,
-        private readonly Filesystem             $filesystem
-    )
-    {
+        private readonly FFProbe $ffProbe,
+        private readonly LoggerInterface $logger,
+        private readonly MessageBusInterface $messageBus,
+        private readonly Filesystem $filesystem
+    ) {
     }
 
     public function scanAll(): void
@@ -53,8 +54,7 @@ class InputPathScanner {
 
     public function scanProfile(Profile $profile): void
     {
-
-        $duration = 0;
+        $duration  = 0;
         $inputPath = sprintf('%s/%s', $this->vidCruncherVideosRoot, $profile->getInputPath());
         if (!is_dir($inputPath)) {
             // FIXME: This sucks for unit testing.  Alternatives?
@@ -88,11 +88,11 @@ class InputPathScanner {
             $projectResult = $this->projectRepository->createQueryBuilder('p')
                 ->addCriteria($criteria)
                 ->getQuery()
-                ->execute();
-            if (count($projectResult) > 0) {
+                ->execute()
+            ;
+            if (\count($projectResult) > 0) {
                 $project = $projectResult[0];
             }
-
         } else {
             // For non-live profiles, if the project's created, that's enough and can ignore it moving forward.
             $project = $this->projectRepository->findOneBy(['originFilePath' => $file->getRealPath()]);
@@ -127,7 +127,6 @@ class InputPathScanner {
             return;
         }
 
-
         // The remainder of this handling covers live videos, OR videos that don't meet the duration threshold
         // Move the file to the 'fragments' path
         $newFilePath = sprintf('%s/%s/%s', $this->vidCruncherVideosRoot, $this->vidCruncherVideoFragmentsPath, $file->getFilename());
@@ -158,11 +157,11 @@ class InputPathScanner {
             str_replace(' ', '%20',
                 $this->filesystem->makePathRelative(
                     $mediaFile->getMediaPath(),
-                    $this->parameterBag->get('kernel.project_dir') . '/public'
+                    $this->parameterBag->get('kernel.project_dir').'/public'
                 )
             )
         );
-        $mediaFileUrl = substr($mediaFileUrl, 0, strlen($mediaFileUrl) - 1);
+        $mediaFileUrl = substr($mediaFileUrl, 0, \strlen($mediaFileUrl) - 1);
 
         $this->messageBus->dispatch(
             new EncodeMessage(
