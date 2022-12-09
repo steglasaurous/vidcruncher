@@ -15,6 +15,7 @@ services:
             $vidCruncherSplitThresholdSeconds: 120
             $vidCruncherCoordinatorBaseUrl: '%env(COORDINATOR_BASE_URL)%'
             $vidCruncherVideoFragmentsPath: '%env(VIDEO_FRAGMENTS_PATH)%'
+            $vidCruncherWorkerName: '%env(WORKER_NAME)%'
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name

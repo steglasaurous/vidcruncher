@@ -2,12 +2,14 @@
 
 namespace App\MessageHandler;
 
+use App\Entity\MediaStatus;
 use App\Message\EncodeMessage;
 use App\Service\FFMpeg\Format\AV1Format;
 use FFMpeg\FFMpeg;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\HttpClient\Exception\TransportException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Mime\Part\DataPart;
 use Symfony\Component\Mime\Part\Multipart\FormDataPart;
@@ -24,9 +26,12 @@ class EncodeMessageHandler
         private ParameterBagInterface $parameterBag,
         private Filesystem $filesystem,
         private HttpClientInterface $coordinatorClient,
+        private string $vidCruncherWorkerName
     ) {
         // Just using hostname for now, but wonder if there's a better way?
-        $this->hostname = gethostname();
+        if (empty($this->vidCruncherWorkerName)) {
+            $this->vidCruncherWorkerName = gethostname();
+        }
     }
 
     public function __invoke(EncodeMessage $encodeMessage)
@@ -50,18 +55,39 @@ class EncodeMessageHandler
         // Push to the API for this media file that it's being processed.
         $start = new \DateTime();
 
-        $updateResponse = $this->coordinatorClient->request('PUT', sprintf('/api/media/%s', $encodeMessage->getMediaId()), [
-            'json' => [
-                'start'      => $start->format(\DateTime::RFC3339),
-                'status'     => 'processing',
-                'workerName' => $this->hostname,
-            ],
-        ]);
+        try {
+            $updateResponse = $this->coordinatorClient->request('PUT', sprintf('/api/media/%s', $encodeMessage->getMediaId()), [
+                'json' => [
+                    'start'      => $start->format(\DateTime::RFC3339),
+                    'status'     => 'processing',
+                    'workerName' => $this->hostname,
+                ],
+            ]);
 
-        // Just getting this to throw an exception if there's a problem.
-        $updateResponse->getContent(true);
+            // Just getting this to throw an exception if there's a problem.
+            $updateResponse->getContent(true);
+        } catch (TransportException $e) {
+            $this->logger->critical("Unable to update media on coordinator to processing state: " . $e->getMessage());
 
-        $encode->save();
+            return false;
+        }
+        try {
+            $encode->save();
+        } catch (FFMpeg\Exception\RuntimeException $e) {
+            $this->logger->critical("ffmpeg encoding failed: " . $e->getMessage());
+
+            $updateResponse = $this->coordinatorClient->request('PUT', sprintf('/api/media/%s', $encodeMessage->getMediaId()), [
+                'json' => [
+                    'status'     => MediaStatus::Failed,
+                    'workerName' => $this->hostname,
+                ],
+            ]);
+
+            // Just getting this to throw an exception if there's a problem.
+            $updateResponse->getContent(true);
+
+        }
+
 
         $formFields = [
             'mediaType' => 'output_video',
