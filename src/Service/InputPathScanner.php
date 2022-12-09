@@ -75,6 +75,7 @@ class InputPathScanner
         if (time() - $file->getMTime() < $profile->getProcessModifiedOlderThan()) {
             return;
         }
+        $project = null;
 
         if ($profile->isLiveRecordings()) {
             // Live recordings will arrive as split files as it's being recorded.
