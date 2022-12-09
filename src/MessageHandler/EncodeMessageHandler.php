@@ -2,14 +2,14 @@
 
 namespace App\MessageHandler;
 
-use App\Entity\MediaStatus;
+use App\Enum\MediaStatus;
 use App\Message\EncodeMessage;
 use App\Service\FFMpeg\Format\AV1Format;
+use FFMpeg\Exception\RuntimeException;
 use FFMpeg\FFMpeg;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\HttpClient\Exception\TransportException;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Mime\Part\DataPart;
 use Symfony\Component\Mime\Part\Multipart\FormDataPart;
@@ -53,41 +53,20 @@ class EncodeMessageHandler
         $encode->map(['0'], $format, $outputFile);
 
         // Push to the API for this media file that it's being processed.
-        $start = new \DateTime();
+        $this->updateMediaStatus($encodeMessage->getMediaId(), MediaStatus::Processing, new \DateTime());
 
-        try {
-            $updateResponse = $this->coordinatorClient->request('PUT', sprintf('/api/media/%s', $encodeMessage->getMediaId()), [
-                'json' => [
-                    'start'      => $start->format(\DateTime::RFC3339),
-                    'status'     => 'processing',
-                    'workerName' => $this->hostname,
-                ],
-            ]);
-
-            // Just getting this to throw an exception if there's a problem.
-            $updateResponse->getContent(true);
-        } catch (TransportException $e) {
-            $this->logger->critical("Unable to update media on coordinator to processing state: " . $e->getMessage());
-
-            return false;
-        }
         try {
             $encode->save();
-        } catch (FFMpeg\Exception\RuntimeException $e) {
-            $this->logger->critical("ffmpeg encoding failed: " . $e->getMessage());
+        } catch (RuntimeException $e) {
+            $this->logger->critical("ffmpeg failed: " . $e->getMessage());
 
-            $updateResponse = $this->coordinatorClient->request('PUT', sprintf('/api/media/%s', $encodeMessage->getMediaId()), [
-                'json' => [
-                    'status'     => MediaStatus::Failed,
-                    'workerName' => $this->hostname,
-                ],
-            ]);
+            $this->updateMediaStatus($encodeMessage->getMediaId(), MediaStatus::Failed, null, new \DateTime());
 
-            // Just getting this to throw an exception if there's a problem.
-            $updateResponse->getContent(true);
+            // Clean up - remove output file since it may or may not have been completed.
+            $this->filesystem->remove($outputFile);
 
+            throw $e;
         }
-
 
         $formFields = [
             'mediaType' => 'output_video',
@@ -101,19 +80,34 @@ class EncodeMessageHandler
             'body'    => $formData->bodyToIterable(),
         ]);
 
-        $this->logger->info('Uploaded output file.');
+        $this->logger->debug('Uploaded output file.');
         // Update the original media file that it's been completed.
 
-        $completed      = new \DateTime();
-        $updateResponse = $this->coordinatorClient->request('PUT', sprintf('/api/media/%s', $encodeMessage->getMediaId()), [
-            'json' => [
-                'completed' => $completed->format(\DateTime::RFC3339),
-                'status'    => 'done',
-            ],
-        ]);
+        $this->updateMediaStatus($encodeMessage->getMediaId(), MediaStatus::Done, null, new \DateTime());
+
         // Delete the output file since it was uploaded successfully.
         $this->filesystem->remove($outputFile);
+    }
 
-        $this->logger->info('Deleted files');
+    private function updateMediaStatus(int $mediaId, MediaStatus $status, \DateTime $start = null, \DateTime $completed = null)
+    {
+        $data = [
+            'status'     => $status,
+            'workerName' => $this->vidCruncherWorkerName,
+        ];
+
+        if ($start !== null) {
+            $data['start'] = $start->format(\DateTime::RFC3339);
+        }
+        if ($completed !== null) {
+            $data['completed'] = $completed->format(\DateTime::RFC3339);
+        }
+
+        $updateResponse = $this->coordinatorClient->request('PUT', sprintf('/api/media/%s', $mediaId), [
+            'json' => $data,
+        ]);
+
+        // Just getting this to throw an exception if there's a problem.
+        $updateResponse->getContent(true);
     }
 }

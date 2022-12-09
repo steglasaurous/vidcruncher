@@ -4,9 +4,9 @@ namespace App\MessageHandler;
 
 use App\Entity\Media;
 use App\Entity\MediaFile;
-use App\Entity\MediaType;
+use App\Enum\MediaType;
 use App\Entity\Project;
-use App\Entity\ProjectStatus;
+use App\Enum\ProjectStatus;
 use App\Message\AssembleMessage;
 use App\Repository\ProjectRepository;
 use Doctrine\ORM\EntityManagerInterface;

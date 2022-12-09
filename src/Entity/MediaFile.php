@@ -7,18 +7,12 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Link;
 use ApiPlatform\Metadata\Post;
+use App\Enum\MediaType;
 use App\Repository\MediaFileRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
-
-enum MediaType: string
-{
-    case OriginalVideo =  'original_video';
-    case VideoFragment = 'video_fragment';
-    case OutputVideo   = 'output_video';
-}
 
 #[ApiResource(
     operations: [

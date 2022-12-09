@@ -4,10 +4,10 @@ namespace App\MessageHandler;
 
 use App\Entity\Media;
 use App\Entity\MediaFile;
-use App\Entity\MediaStatus;
-use App\Entity\MediaType;
+use App\Enum\MediaStatus;
+use App\Enum\MediaType;
 use App\Entity\Project;
-use App\Entity\ProjectStatus;
+use App\Enum\ProjectStatus;
 use App\Message\EncodeMessage;
 use App\Message\MediaSplitMessage;
 use App\Repository\ProjectRepository;
@@ -92,7 +92,9 @@ class MediaSplitMessageHandler
             $mediaFileUrl = sprintf(
                 '%s/%s',
                 $this->vidCruncherCoordinatorBaseUrl,
-                str_replace(' ', '%20',
+                str_replace(
+                    ' ',
+                    '%20',
                     $this->filesystem->makePathRelative(
                         $newMediaFile->getMediaPath(),
                         $this->parameterBag->get('kernel.project_dir').'/public'

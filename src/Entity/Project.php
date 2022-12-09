@@ -3,21 +3,11 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use App\Enum\ProjectStatus;
 use App\Repository\ProjectRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-
-enum ProjectStatus: string
-{
-    case Pending          = 'pending';
-    case Splitting        = 'splitting';
-    case Processing       = 'processing';
-    case ReadyForAssembly = 'ready_for_assembly';
-    case Assembling       = 'assembling';
-    case Done             = 'done';
-    case Failed           = 'failed';
-}
 
 #[ApiResource]
 #[ORM\Entity(repositoryClass: ProjectRepository::class)]

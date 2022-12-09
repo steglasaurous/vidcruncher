@@ -2,9 +2,9 @@
 
 namespace App\Service;
 
-use App\Entity\MediaStatus;
+use App\Enum\MediaStatus;
 use App\Entity\Project;
-use App\Entity\ProjectStatus;
+use App\Enum\ProjectStatus;
 use App\Message\AssembleMessage;
 use App\Repository\ProjectRepository;
 use Doctrine\Common\Collections\Criteria;

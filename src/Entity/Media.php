@@ -3,18 +3,11 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use App\Enum\MediaStatus;
 use App\Repository\MediaRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-
-enum MediaStatus: string
-{
-    case Pending    = 'pending';
-    case Processing = 'processing';
-    case Done       = 'done';
-    case Failed     = 'failed';
-}
 
 #[ApiResource]
 #[ORM\Entity(repositoryClass: MediaRepository::class)]

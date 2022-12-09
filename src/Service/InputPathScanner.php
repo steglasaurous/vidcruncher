@@ -4,11 +4,11 @@ namespace App\Service;
 
 use App\Entity\Media;
 use App\Entity\MediaFile;
-use App\Entity\MediaStatus;
-use App\Entity\MediaType;
+use App\Enum\MediaStatus;
+use App\Enum\MediaType;
 use App\Entity\Profile;
 use App\Entity\Project;
-use App\Entity\ProjectStatus;
+use App\Enum\ProjectStatus;
 use App\Message\EncodeMessage;
 use App\Message\MediaSplitMessage;
 use App\Repository\ProfileRepository;
@@ -155,7 +155,9 @@ class InputPathScanner
         $mediaFileUrl = sprintf(
             '%s/%s',
             $this->vidCruncherCoordinatorBaseUrl,
-            str_replace(' ', '%20',
+            str_replace(
+                ' ',
+                '%20',
                 $this->filesystem->makePathRelative(
                     $mediaFile->getMediaPath(),
                     $this->parameterBag->get('kernel.project_dir').'/public'
